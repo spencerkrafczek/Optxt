@@ -10,7 +10,9 @@ def get_emotion(frame):
        
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         
-        analysis = DeepFace.analyze(rgb_frame, actions=['emotion'], enforce_detection=False)
+        analysis = DeepFace.analyze(rgb_frame, actions=['emotion'], 
+                                    enforce_detection=False, 
+                                    detector_backend='opencv')
 
         if isinstance(analysis, list):
             result = analysis[0]
@@ -35,6 +37,9 @@ if __name__ == "__main__":
     
     # 1. Open the camera
     cap = cv2.VideoCapture(0)
+    
+    cap.set(cv2.CAP_PROP_BRIGHTNESS, 150) 
+    cap.set(cv2.CAP_PROP_GAIN, 100)
     
     if not cap.isOpened():
         print("Error: Could not open webcam.")
