@@ -30,7 +30,7 @@ def main():
             
         #The visual feedback
         display_frame = frame.copy()
-        cv2.putTest(display_frame, f"Buffer: {len(data_buffer)}/60",
+        cv2.putText(display_frame, f"Buffer: {len(data_buffer)}/60",
                      (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
         
         cv2.imshow("Optxt", display_frame)
