@@ -6,13 +6,6 @@ venv/
 .venv/
 .Python
 
-# Models (binary files - too large for git)
-training/models/*.pkl
-
-# Data files (optional - depends if you want to share training data)
-training/data/gesture/*.json
-training/data/emotion/*.json
-
 # IDE
 .vscode/
 .idea/
