@@ -29,39 +29,30 @@ EMOTION_SETTINGS = {
     "neutral": VoiceSettings(stability=0.8, similarity_boost=0.75, style=0.0)
 }
 
+# Updated snippet for speech.py
 def say_interaction(text, emotion="neutral"):
-    print(f"🔊 Optxt says: {text} ({emotion})")
-    
-    # PART 3: Phrase Caching
     clean_text = text.replace(" ", "_").lower()
     filepath = os.path.join(CACHE_DIR, f"{clean_text}_{emotion}.mp3")
 
-    # If already cached, play locally (Zero Latency)
     if os.path.exists(filepath):
-        play_local_audio(filepath)
+        # afplay is built into macOS and is very reliable for local playback
+        subprocess.run(["afplay", filepath])
         return
 
-    # If not cached, use ElevenLabs
     if USE_ELEVEN:
         try:
-            settings = EMOTION_SETTINGS.get(emotion, EMOTION_SETTINGS["neutral"])
-            audio_stream = client.text_to_speech.stream(
+            # We use .convert() here to get the full audio bytes for saving
+            audio = client.text_to_speech.convert(
                 text=text,
-                voice_id="JBFqnCBsd6RMkjVDRZzb", # Rachel
-                model_id="eleven_flash_v2_5",    # Fastest model
-                voice_settings=settings
+                voice_id="JBFqnCBsd6RMkjVDRZzb",
+                model_id="eleven_flash_v2_5",
+                voice_settings=EMOTION_SETTINGS.get(emotion)
             )
-            
-            # Stream for immediate playback
-            stream(audio_stream)
-            
-            # Optional: Save for next time (Caching)
-            # (Note: streaming and saving simultaneously requires a small buffer)
+            # Save the file to your cache folder
+            save(audio, filepath)
+            play_local_audio(filepath)
         except Exception as e:
-            print(f"ElevenLabs Error: {e}")
             fallback_tts(text)
-    else:
-        fallback_tts(text)
 
 def play_local_audio(path):
     """Play cached files using system tools"""

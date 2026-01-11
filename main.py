@@ -58,7 +58,6 @@ def main():
                     # Pass 'current_emotion' so speech.py knows which settings to use
                     say_interaction(message, emotion=current_emotion)
                     last_announcement_time = current_time
-                    
                 if changed:
                     print(f">>> {message}")
                     say_interaction(message)
