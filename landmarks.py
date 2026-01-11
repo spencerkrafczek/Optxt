@@ -47,10 +47,29 @@ def extract_landmarks(frame):
     if face_results.multi_face_landmarks:
         face = face_results.multi_face_landmarks[0]
         landmarks['face'] = {
+            # === MOUTH (detects smiling, frowning) ===
+            'mouth_left': (face.landmark[61].x, face.landmark[61].y, face.landmark[61].z),
+            'mouth_right': (face.landmark[291].x, face.landmark[291].y, face.landmark[291].z),
+            'mouth_top': (face.landmark[0].x, face.landmark[0].y, face.landmark[0].z),
+            'mouth_bottom': (face.landmark[17].x, face.landmark[17].y, face.landmark[17].z),
+            'upper_lip': (face.landmark[13].x, face.landmark[13].y, face.landmark[13].z),
+            'lower_lip': (face.landmark[14].x, face.landmark[14].y, face.landmark[14].z),
+            
+            # === EYEBROWS (detects surprised, angry) ===
+            'left_eyebrow_inner': (face.landmark[70].x, face.landmark[70].y, face.landmark[70].z),
+            'left_eyebrow_outer': (face.landmark[107].x, face.landmark[107].y, face.landmark[107].z),
+            'right_eyebrow_inner': (face.landmark[300].x, face.landmark[300].y, face.landmark[300].z),
+            'right_eyebrow_outer': (face.landmark[336].x, face.landmark[336].y, face.landmark[336].z),
+            
+            # === EYES (detects shocked - wide open eyes) ===
+            'left_eye_top': (face.landmark[159].x, face.landmark[159].y, face.landmark[159].z),
+            'left_eye_bottom': (face.landmark[145].x, face.landmark[145].y, face.landmark[145].z),
+            'right_eye_top': (face.landmark[386].x, face.landmark[386].y, face.landmark[386].z),
+            'right_eye_bottom': (face.landmark[374].x, face.landmark[374].y, face.landmark[374].z),
+            
+            # === REFERENCE POINTS (for head tracking - gestures) ===
             'nose_tip': (face.landmark[4].x, face.landmark[4].y, face.landmark[4].z),
             'chin': (face.landmark[152].x, face.landmark[152].y, face.landmark[152].z),
-            'left_eye': (face.landmark[33].x, face.landmark[33].y, face.landmark[33].z),
-            'right_eye': (face.landmark[263].x, face.landmark[263].y, face.landmark[263].z),
             'forehead': (face.landmark[10].x, face.landmark[10].y, face.landmark[10].z),
         }
     
