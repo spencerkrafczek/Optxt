@@ -7,6 +7,7 @@ venv/
 .Python
 .env
 
+
 # Models (binary files - too large for git)
 training/models/*.pkl
 
