@@ -1,61 +1,70 @@
-from deepface import DeepFace
-import cv2
+# emotions.py
+import numpy as np
+import joblib
+import os
 
-def get_emotion(frame):
-    """
-    Analyzes the frame locally using DeepFace.
-    Returns the dominant emotion (e.g., 'happy', 'sad', 'neutral').
-    """
-    try:
-       
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
-        analysis = DeepFace.analyze(rgb_frame, actions=['emotion'], 
-                                    enforce_detection=False, 
-                                    detector_backend='opencv')
+# Load emotion model (do this once at startup)
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "training/models/emotion_model.pkl")
 
-        if isinstance(analysis, list):
-            result = analysis[0]
-        else:
-            result = analysis
+try:
+    emotion_model = joblib.load(MODEL_PATH)
+    print("✅ Emotion model loaded successfully")
+except FileNotFoundError:
+    emotion_model = None
+    print("⚠️  Emotion model not found - train it first!")
+    print(f"   Looking for: {MODEL_PATH}")
 
-        emotion = result['dominant_emotion']
+def extract_emotion_features(landmarks):
+    """Convert face landmarks to features for emotion model."""
+    features = []
     
-        return emotion
-
-    except ValueError:
+    if 'face' not in landmarks:
         return None
-    except Exception as e:
-        print(f"DeepFace Error: {e}")
-        return None
+    
+    face = landmarks['face']
+    
+    # Flatten all face coordinates in sorted order (x, y only)
+    for key in sorted(face.keys()):
+        features.extend([face[key][0], face[key][1]])
+    
+    return features
 
-# ... (Your existing code stays above this) ...
+def detect_emotion(landmarks):
+    """Predict emotion from landmarks."""
+    if emotion_model is None:
+        return "no_model"
+    
+    if landmarks is None:
+        return "no_data"
+    
+    features = extract_emotion_features(landmarks)
+    
+    if features is None:
+        return "no_face"
+    
+    # Reshape for model (expects 2D array)
+    features_array = np.array(features).reshape(1, -1)
+    
+    # Predict
+    prediction = emotion_model.predict(features_array)[0]
+    
+    return prediction
 
-# --- ADD THIS TO THE BOTTOM ---
+# Test
 if __name__ == "__main__":
-    print("--- Testing DeepFace (Local AI) ---")
+    print("Testing emotion detection...")
+    print(f"Model loaded: {emotion_model is not None}")
     
-    # 1. Open the camera
-    cap = cv2.VideoCapture(0)
+    # Dummy test
+    dummy_landmarks = {
+        'face': {
+            'mouth_left': (0.3, 0.6, 0.0),
+            'mouth_right': (0.7, 0.6, 0.0),
+            'nose_tip': (0.5, 0.5, 0.0),
+            'chin': (0.5, 0.8, 0.0),
+            'forehead': (0.5, 0.2, 0.0)
+        }
+    }
     
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
-        exit()
-    
-    # 2. Grab a frame
-    ret, frame = cap.read()
-    
-    if ret:
-        print("Capturing frame...")
-        # 3. Call your function
-        emotion = get_emotion(frame)
-        print(f"\nRESULT: The AI thinks you are: {emotion}")
-        
-        # Show the image so you know what it saw
-        cv2.imshow("What the AI saw", frame)
-        cv2.waitKey(0) # Press any key to close window
-        cv2.destroyAllWindows()
-    else:
-        print("Failed to capture image.")
-        
-    cap.release()
+    result = detect_emotion(dummy_landmarks)
+    print(f"Test prediction: {result}")
