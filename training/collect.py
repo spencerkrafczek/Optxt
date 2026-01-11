@@ -72,14 +72,14 @@ if __name__ == "__main__":
     choice = input("\nCollect [G]estures or [E]motions? ").strip().upper()
     
     if choice == 'G':
-        gestures = ["head_nod", "head_shake", "shrug", "wave", "middle_finger", "neutral"]
+        gestures = ["headnod", "headshake", "shrug", "wave", "middlefinger", "neutral"]
         print("\n=== GESTURE COLLECTION ===")
         print("Instructions:")
-        print("  head_nod: Nod up and down")
-        print("  head_shake: Shake left and right")
+        print("  headnod: Nod up and down")
+        print("  headshake: Shake left and right")
         print("  shrug: Shrug shoulders")
         print("  wave: Wave your hand")
-        print("  middle_finger: You know")
+        print("  middlefinger: You know")
         print("  neutral: Sit still, hands down")
         
         for gesture in gestures:
