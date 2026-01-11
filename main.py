@@ -28,7 +28,7 @@ def main():
     print("=" * 50)
 
     last_announcement_time = time.time()
-    announcement_cooldown = 2.0  # Only announce changes every 2 seconds
+    announcement_cooldown = 4.0  # Only announce changes every 2 seconds
     
     while True:
         ret, frame = cap.read()
@@ -66,7 +66,7 @@ def main():
             f"Gesture: {current_gesture}",
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
+            1,
             (0, 255, 0),
             2
         )
@@ -75,7 +75,7 @@ def main():
             f"Emotion: {current_emotion}",
             (10, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
+            1,
             (0, 255, 0),
             2
         )
