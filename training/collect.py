@@ -36,16 +36,45 @@ def collect_data(label, duration=5, data_type="gesture"):
                 'landmarks': landmarks
             })
             
-            # Visual feedback
+            # === FULL VISUAL FEEDBACK ===
             h, w, _ = frame.shape
-            if 'face' in landmarks and 'nose_tip' in landmarks['face']:
-                nose = landmarks['face']['nose_tip']
-                cv2.circle(frame, (int(nose[0] * w), int(nose[1] * h)), 8, (0, 255, 0), -1)
             
+            # Draw FACE (green dots)
+            if 'face' in landmarks:
+                face = landmarks['face']
+                for point_name, (x, y, z) in face.items():
+                    cv2.circle(frame, (int(x * w), int(y * h)), 3, (0, 255, 0), -1)
+            
+            # Draw POSE (blue skeleton)
+            if 'pose' in landmarks:
+                pose = landmarks['pose']
+                
+                # Draw shoulder line
+                left_sh = (int(pose['left_shoulder'][0] * w), int(pose['left_shoulder'][1] * h))
+                right_sh = (int(pose['right_shoulder'][0] * w), int(pose['right_shoulder'][1] * h))
+                cv2.line(frame, left_sh, right_sh, (255, 0, 0), 3)
+                
+                # Draw left arm
+                left_elb = (int(pose['left_elbow'][0] * w), int(pose['left_elbow'][1] * h))
+                left_wrist = (int(pose['left_wrist'][0] * w), int(pose['left_wrist'][1] * h))
+                cv2.line(frame, left_sh, left_elb, (255, 0, 0), 2)
+                cv2.line(frame, left_elb, left_wrist, (255, 0, 0), 2)
+                
+                # Draw right arm
+                right_elb = (int(pose['right_elbow'][0] * w), int(pose['right_elbow'][1] * h))
+                right_wrist = (int(pose['right_wrist'][0] * w), int(pose['right_wrist'][1] * h))
+                cv2.line(frame, right_sh, right_elb, (255, 0, 0), 2)
+                cv2.line(frame, right_elb, right_wrist, (255, 0, 0), 2)
+                
+                # Draw joint dots
+                for point in [left_sh, right_sh, left_elb, right_elb, left_wrist, right_wrist]:
+                    cv2.circle(frame, point, 6, (255, 0, 0), -1)
+            
+            # Draw HANDS (red dots)
             if 'hands' in landmarks:
                 for hand in landmarks['hands']:
-                    wrist = hand['wrist']
-                    cv2.circle(frame, (int(wrist[0] * w), int(wrist[1] * h)), 8, (0, 0, 255), -1)
+                    for point_name, (x, y, z) in hand.items():
+                        cv2.circle(frame, (int(x * w), int(y * h)), 6, (0, 0, 255), -1)
         
         # Countdown
         remaining = duration - (time.time() - start_time)
@@ -66,34 +95,36 @@ def collect_data(label, duration=5, data_type="gesture"):
 
 if __name__ == "__main__":
     print("=" * 50)
-    print("DATA COLLECTION SYSTEM")
+    print("SOCIAL CUE DATA COLLECTION")
     print("=" * 50)
     
     choice = input("\nCollect [G]estures or [E]motions? ").strip().upper()
     
     if choice == 'G':
-        gestures = ["shrug", "armscrossed", "wave", "thumbsup", "thumbsdown", "middlefinger"]
+        gestures = ["headnod", "headshake", "shrug", "wave", "thumbsup", "thumbsdown", "pointingatyou", "armscrossed"]
         print("\n=== GESTURE COLLECTION ===")
         print("Instructions:")
-        print("  shrug: Shrug shoulders - hold them up")
-        print("  armscrossed: Cross arms over chest")
-        print("  wave: Wave your hand side to side")
-        print("  thumbsup: Thumbs up gesture")
-        print("  thumbsdown: Thumbs down gesture")
-        print("  middlefinger: Middle finger up")
+        print("  headnod: Nod up and down CONTINUOUSLY for 5 seconds")
+        print("  headshake: Shake left and right CONTINUOUSLY for 5 seconds")
+        print("  shrug: Shrug shoulders UP and hold for 5 seconds")
+        print("  wave: Wave hand side to side CONTINUOUSLY")
+        print("  thumbsup: Hold thumbs up gesture steady")
+        print("  thumbsdown: Hold thumbs down gesture steady")
+        print("  pointingatyou: Point index finger at camera, hold steady")
+        print("  armscrossed: Cross arms over chest, hold for 5 seconds")
         
         for gesture in gestures:
             input(f"\nPress Enter to record '{gesture}'...")
             collect_data(gesture, duration=5, data_type="gesture")
     
     elif choice == 'E':
-        emotions = ["angry", "happy", "neutral", "shocked"]
+        emotions = ["angry", "happy", "neutral", "confused"]
         print("\n=== EMOTION COLLECTION ===")
         print("Instructions:")
         print("  angry: REALLY furrow eyebrows, frown hard, tighten jaw")
         print("  happy: BIG smile, show teeth, raise cheeks")
         print("  neutral: Completely relaxed, resting face")
-        print("  shocked: Eyes SUPER wide, mouth in big O shape")
+        print("  confused: Furrow brow slightly, tilt head, slight frown")
         
         for emotion in emotions:
             input(f"\nPress Enter to record '{emotion}'...")
