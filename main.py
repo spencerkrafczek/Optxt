@@ -10,7 +10,7 @@ from state_tracker import StateTracker
 
 def main():
     print("=" * 50)
-    print("OPTXT - INTERVIEW PRACTICE TOOL")
+    print("OPTXT")
     print("=" * 50)
 
     # Setup webcam
@@ -91,7 +91,7 @@ def main():
             1
         )
 
-        cv2.imshow("Interview Practice", display_frame)
+        cv2.imshow("OPTXT", display_frame)
                 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
