@@ -38,9 +38,6 @@ if __name__ == "__main__":
     # 1. Open the camera
     cap = cv2.VideoCapture(0)
     
-    cap.set(cv2.CAP_PROP_BRIGHTNESS, 150) 
-    cap.set(cv2.CAP_PROP_GAIN, 100)
-    
     if not cap.isOpened():
         print("Error: Could not open webcam.")
         exit()
