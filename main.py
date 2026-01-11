@@ -1,82 +1,69 @@
+# main.py
 import cv2 
-import time 
-from collections import deque
+import time
 
-#importing everyone elses codes
 from landmarks import extract_landmarks
 from gestures import detect_gesture
 from emotions import detect_emotion
-from speech import speak
+from speech import say_interaction
 from state_tracker import StateTracker
 
 def main():
     print("=" * 50)
-    print("OPTXT - Social Cue Detection for the Blind")
+    print("OPTXT - INTERVIEW PRACTICE TOOL")
     print("=" * 50)
 
-
-    # Sets up the webcam
+    # Setup webcam
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
-        print("Camera couldn't be found")
+        print("❌ Camera not found")
         return
     
-    print("Webcam found")
+    print("✅ Webcam ready")
 
-    #Sets up the buffer - delay of last 60 frames of data to detect gestures
-    data_buffer = deque(maxlen=60)
+    # State tracker (prevents repeating same info)
+    tracker = StateTracker()
 
-    #State tracker this prevents the same info being repeated multiple times
-    tracker = StateTracker(cooldown=1.5)
-
-    #Timing for intervals
-    last_analysis_time = 0
-    analysis_interval = 0.5
-
-    print("Code is running. Press \'q\' to quit.")
+    print("🎬 Running... Press 'q' to quit")
     print("=" * 50)
 
-    last_analysis_time = time.time()
+    last_announcement_time = time.time()
+    announcement_cooldown = 2.0  # Only announce changes every 2 seconds
     
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Failed to find face")
+            print("❌ Failed to read frame")
             break
 
-        current_time = time.time()
-        # --- PERSON A'S WORK GOES HERE (Landmarks) ---
+        # Extract landmarks from current frame
         landmarks = extract_landmarks(frame)
-        if landmarks:
-            landmark_buffer.append(landmarks)
-
-        if (current_time - last_analysis_time) >= analysis_interval:
-            last_analysis_time = current_time
-
-        gesture = detect_gesture(list(landmark_buffer))
-
-        # --- PERSON B'S WORK GOES HERE (Analysis) ---
-        emotion = detect_emotion(frame)
-
-        changes = tracker.get_changes(gesture, emotion)
-
-        if changes:
-            output = ", ".join(changes)
-            print(f">>> {output}")
-            speak(output)
-
-
-        # Analyze every 1 second so we don't lag
-        if (time.time() - last_analysis_time) > 1.0:
-            last_analysis_time = time.time()
-            
-        #The visual feedback
-        display_frame = frame.copy()
-
         
+        current_gesture = "no_data"
+        current_emotion = "no_data"
+        
+        if landmarks:
+            # Detect gesture and emotion
+            current_gesture = detect_gesture(landmarks)
+            current_emotion = detect_emotion(landmarks)
+            
+            # Check if anything changed
+            current_time = time.time()
+            if (current_time - last_announcement_time) >= announcement_cooldown:
+                changed, message = tracker.update(current_gesture, current_emotion)
+                
+                if changed:
+                    print(f">>> {message}")
+                    say_interaction(message)
+                    last_announcement_time = current_time
+        
+        # Visual feedback
+        display_frame = frame.copy()
+        
+        # Draw current status
         cv2.putText(
             display_frame,
-            f"Gesture: {tracker.previous_gesture or 'detecting...'}",
+            f"Gesture: {current_gesture}",
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -85,25 +72,26 @@ def main():
         )
         cv2.putText(
             display_frame,
-            f"Emotion: {tracker.previous_emotion or 'detecting...'}",
+            f"Emotion: {current_emotion}",
             (10, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
             (0, 255, 0),
             2
         )
+        
+        # Show FPS
         cv2.putText(
             display_frame,
-            f"Buffer: {len(landmark_buffer)}/60",
+            "Press 'q' to quit",
             (10, 90),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.7,
-            (0, 255, 0),
-            2
+            0.5,
+            (255, 255, 255),
+            1
         )
 
-
-        cv2.imshow("Optxt", display_frame)
+        cv2.imshow("Interview Practice", display_frame)
                 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -111,6 +99,7 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
+    print("\n👋 Thanks for practicing!")
 
 if __name__ == "__main__":
     main()
