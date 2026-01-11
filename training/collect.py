@@ -72,29 +72,28 @@ if __name__ == "__main__":
     choice = input("\nCollect [G]estures or [E]motions? ").strip().upper()
     
     if choice == 'G':
-        gestures = ["headnod", "headshake", "shrug", "wave", "middlefinger", "neutral"]
+        gestures = ["shrug", "armscrossed", "wave", "thumbsup", "thumbsdown", "middlefinger"]
         print("\n=== GESTURE COLLECTION ===")
         print("Instructions:")
-        print("  headnod: Nod up and down")
-        print("  headshake: Shake left and right")
-        print("  shrug: Shrug shoulders")
-        print("  wave: Wave your hand")
-        print("  middlefinger: You know")
-        print("  neutral: Sit still, hands down")
+        print("  shrug: Shrug shoulders - hold them up")
+        print("  armscrossed: Cross arms over chest")
+        print("  wave: Wave your hand side to side")
+        print("  thumbsup: Thumbs up gesture")
+        print("  thumbsdown: Thumbs down gesture")
+        print("  middlefinger: Middle finger up")
         
         for gesture in gestures:
             input(f"\nPress Enter to record '{gesture}'...")
             collect_data(gesture, duration=5, data_type="gesture")
     
     elif choice == 'E':
-        emotions = ["happy", "sad", "angry", "shocked", "neutral"]
+        emotions = ["angry", "happy", "neutral", "shocked"]
         print("\n=== EMOTION COLLECTION ===")
         print("Instructions:")
-        print("  happy: Big smile!")
-        print("  sad: Frown, look down")
-        print("  angry: Furrowed brow, frown")
-        print("  shocked: Eyes wide, mouth open")
-        print("  neutral: Relaxed face")
+        print("  angry: REALLY furrow eyebrows, frown hard, tighten jaw")
+        print("  happy: BIG smile, show teeth, raise cheeks")
+        print("  neutral: Completely relaxed, resting face")
+        print("  shocked: Eyes SUPER wide, mouth in big O shape")
         
         for emotion in emotions:
             input(f"\nPress Enter to record '{emotion}'...")
