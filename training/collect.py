@@ -1,164 +1,106 @@
+# training/collect.py
 import cv2
-import mediapipe as mp
-import numpy as np
+import sys
 import os
-from datetime import datetime
+import time
+import json
 
-# Try to import from main project, fall back to local copy
-try:
-    from landmarks import extract_hand_landmarks
-except ImportError:
-    from training.landmarks import extract_hand_landmarks
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from landmarks import extract_landmarks
 
-class DataCollector:
-    def __init__(self, data_type='gesture'):
-        """
-        data_type: 'gesture' or 'emotion'
-        """
-        self.data_type = data_type
-        self.data_dir = f'training/data/{data_type}'
-        os.makedirs(self.data_dir, exist_ok=True)
-        
-        self.mp_hands = mp.solutions.hands
-        self.mp_face_mesh = mp.solutions.face_mesh
-        self.hands = self.mp_hands.Hands(
-            static_image_mode=False,
-            max_num_hands=2,
-            min_detection_confidence=0.5
-        )
-        self.face_mesh = self.mp_face_mesh.FaceMesh(
-            static_image_mode=False,
-            max_num_faces=1,
-            min_detection_confidence=0.5
-        )
-        
-        self.current_label = None
-        self.samples = []
-        
-    def collect_gesture_sample(self, frame, label):
-        """Collect gesture sample (hand landmarks)"""
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.hands.process(frame_rgb)
-        
-        if results.multi_hand_landmarks:
-            landmarks = extract_hand_landmarks(results.multi_hand_landmarks[0])
-            self.samples.append({
-                'landmarks': landmarks,
-                'label': label,
-                'timestamp': datetime.now().isoformat()
-            })
-            return True
-        return False
+def collect_data(label, duration=5, data_type="gesture"):
+    """Records landmarks for gestures or emotions."""
     
-    def collect_emotion_sample(self, frame, label):
-        """Collect emotion sample (face landmarks)"""
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = self.face_mesh.process(frame_rgb)
-        
-        if results.multi_face_landmarks:
-            face = results.multi_face_landmarks[0]
-            landmarks = []
-            for lm in face.landmark:
-                landmarks.extend([lm.x, lm.y, lm.z])
-            
-            self.samples.append({
-                'landmarks': landmarks,
-                'label': label,
-                'timestamp': datetime.now().isoformat()
-            })
-            return True
-        return False
-    
-    def save_samples(self):
-        """Save collected samples to file"""
-        if not self.samples:
-            print("No samples to save!")
-            return
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{self.data_dir}/{self.current_label}_{timestamp}.npy"
-        
-        # Convert to numpy array
-        data = {
-            'landmarks': [s['landmarks'] for s in self.samples],
-            'labels': [s['label'] for s in self.samples],
-            'timestamps': [s['timestamp'] for s in self.samples]
-        }
-        
-        np.save(filename, data)
-        print(f"Saved {len(self.samples)} samples to {filename}")
-        self.samples = []
-
-def main():
-    print("=" * 50)
-    print("DATA COLLECTION TOOL")
-    print("=" * 50)
-    print("\nChoose data type:")
-    print("1. Gesture (hand landmarks)")
-    print("2. Emotion (face landmarks)")
-    
-    choice = input("\nEnter choice (1 or 2): ").strip()
-    data_type = 'gesture' if choice == '1' else 'emotion'
-    
-    collector = DataCollector(data_type=data_type)
-    
-    if data_type == 'gesture':
-        print("\nGesture labels: rock, paper, scissors, none")
-        label = input("Enter gesture label: ").strip().lower()
-    else:
-        print("\nEmotion labels: happy, sad, angry, neutral, surprised")
-        label = input("Enter emotion label: ").strip().lower()
-    
-    collector.current_label = label
-    
-    print(f"\nCollecting {data_type} data for: {label}")
-    print("Press 'q' to stop and save")
-    print("Press SPACE to capture sample")
-    print("\nStarting camera...")
+    save_dir = os.path.join(os.path.dirname(__file__), f"data/{data_type}")
+    os.makedirs(save_dir, exist_ok=True)
     
     cap = cv2.VideoCapture(0)
-    sample_count = 0
+    frames_data = []
     
-    while True:
+    print(f"\n=== Recording: {label} ===")
+    print("Get ready...")
+    time.sleep(2)
+    print("GO!")
+    
+    start_time = time.time()
+    
+    while time.time() - start_time < duration:
         ret, frame = cap.read()
         if not ret:
-            break
+            continue
         
-        frame = cv2.flip(frame, 1)
-        display = frame.copy()
-        
-        # Add UI
-        cv2.putText(display, f"Label: {label}", (10, 30),
-                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(display, f"Samples: {sample_count}", (10, 70),
-                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(display, "SPACE = Capture | Q = Save & Quit", (10, 110),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-        
-        cv2.imshow('Data Collection', display)
-        
-        key = cv2.waitKey(1) & 0xFF
-        
-        if key == ord(' '):
-            if data_type == 'gesture':
-                success = collector.collect_gesture_sample(frame, label)
-            else:
-                success = collector.collect_emotion_sample(frame, label)
+        landmarks = extract_landmarks(frame)
+        if landmarks:
+            frames_data.append({
+                'timestamp': time.time() - start_time,
+                'landmarks': landmarks
+            })
             
-            if success:
-                sample_count += 1
-                print(f"✓ Captured sample {sample_count}")
-            else:
-                print(f"✗ Failed - no {data_type} detected")
+            # Visual feedback
+            h, w, _ = frame.shape
+            if 'face' in landmarks and 'nose_tip' in landmarks['face']:
+                nose = landmarks['face']['nose_tip']
+                cv2.circle(frame, (int(nose[0] * w), int(nose[1] * h)), 8, (0, 255, 0), -1)
+            
+            if 'hands' in landmarks:
+                for hand in landmarks['hands']:
+                    wrist = hand['wrist']
+                    cv2.circle(frame, (int(wrist[0] * w), int(wrist[1] * h)), 8, (0, 0, 255), -1)
         
-        elif key == ord('q'):
-            break
+        # Countdown
+        remaining = duration - (time.time() - start_time)
+        cv2.putText(frame, f"{label}: {remaining:.1f}s", (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.imshow('Recording', frame)
+        cv2.waitKey(1)
     
     cap.release()
     cv2.destroyAllWindows()
     
-    collector.save_samples()
-    print(f"\nTotal samples collected: {sample_count}")
+    # Save
+    filename = f"{save_dir}/{label}_{int(time.time())}.json"
+    with open(filename, 'w') as f:
+        json.dump(frames_data, f)
+    
+    print(f"✓ Saved {len(frames_data)} frames to {filename}")
 
 if __name__ == "__main__":
-    main()
+    print("=" * 50)
+    print("DATA COLLECTION SYSTEM")
+    print("=" * 50)
+    
+    choice = input("\nCollect [G]estures or [E]motions? ").strip().upper()
+    
+    if choice == 'G':
+        gestures = ["head_nod", "head_shake", "shrug", "wave", "middle_finger", "neutral"]
+        print("\n=== GESTURE COLLECTION ===")
+        print("Instructions:")
+        print("  head_nod: Nod up and down")
+        print("  head_shake: Shake left and right")
+        print("  shrug: Shrug shoulders")
+        print("  wave: Wave your hand")
+        print("  middle_finger: You know")
+        print("  neutral: Sit still, hands down")
+        
+        for gesture in gestures:
+            input(f"\nPress Enter to record '{gesture}'...")
+            collect_data(gesture, duration=5, data_type="gesture")
+    
+    elif choice == 'E':
+        emotions = ["happy", "sad", "angry", "shocked", "neutral"]
+        print("\n=== EMOTION COLLECTION ===")
+        print("Instructions:")
+        print("  happy: Big smile!")
+        print("  sad: Frown, look down")
+        print("  angry: Furrowed brow, frown")
+        print("  shocked: Eyes wide, mouth open")
+        print("  neutral: Relaxed face")
+        
+        for emotion in emotions:
+            input(f"\nPress Enter to record '{emotion}'...")
+            collect_data(emotion, duration=5, data_type="emotion")
+    
+    else:
+        print("Invalid choice. Run again and type G or E.")
+    
+    print("\n=== Done! ===")
