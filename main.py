@@ -52,6 +52,13 @@ def main():
             if (current_time - last_announcement_time) >= announcement_cooldown:
                 changed, message = tracker.update(current_gesture, current_emotion)
                 
+                # Inside the 'if changed:' block of main.py
+                if changed:
+                    print(f">>> {message}")
+                    # Pass 'current_emotion' so speech.py knows which settings to use
+                    say_interaction(message, emotion=current_emotion)
+                    last_announcement_time = current_time
+                    
                 if changed:
                     print(f">>> {message}")
                     say_interaction(message)

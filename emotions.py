@@ -2,7 +2,18 @@
 import numpy as np
 import joblib
 import os
+from elevenlabs import VoiceSettings
 
+# Mapping of emotions to voice behaviors
+# Stability: 0.0 (Expressive) to 1.0 (Monotone)
+# Style: 0.0 (Normal) to 1.0 (Exaggerated)
+EMOTION_VOICE_MAP = {
+    "happy": VoiceSettings(stability=0.4, similarity_boost=0.75, style=0.6),
+    "sad": VoiceSettings(stability=0.3, similarity_boost=0.8, style=0.4),
+    "angry": VoiceSettings(stability=0.2, similarity_boost=0.9, style=0.9),
+    "shocked": VoiceSettings(stability=0.3, similarity_boost=0.7, style=0.8),
+    "neutral": VoiceSettings(stability=0.8, similarity_boost=0.75, style=0.0)
+}
 # Load emotion model (do this once at startup)
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "training/models/emotion_model.pkl")
 
