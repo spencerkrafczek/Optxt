@@ -54,7 +54,7 @@ def main():
                 
                 if changed:
                     print(f">>> {message}")
-                    say_interaction(message)
+                    say_interaction(message, emotion=current_emotion)
                     last_announcement_time = current_time
         
         # Visual feedback
