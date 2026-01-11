@@ -101,30 +101,31 @@ if __name__ == "__main__":
     choice = input("\nCollect [G]estures or [E]motions? ").strip().upper()
     
     if choice == 'G':
-        gestures = ["headnod", "headshake", "shrug", "wave", "thumbsup", "thumbsdown", "pointingatyou", "armscrossed"]
+        gestures = ["wave", "thumbsup", "thumbsdown", "pointingatyou", "middlefinger", "shrug", "headnod", "headshake", "neutral"]
         print("\n=== GESTURE COLLECTION ===")
         print("Instructions:")
-        print("  headnod: Nod up and down CONTINUOUSLY for 5 seconds")
-        print("  headshake: Shake left and right CONTINUOUSLY for 5 seconds")
-        print("  shrug: Shrug shoulders UP and hold for 5 seconds")
-        print("  wave: Wave hand side to side CONTINUOUSLY")
+        print("  wave: Wave hand side to side CONTINUOUSLY for 5 seconds")
         print("  thumbsup: Hold thumbs up gesture steady")
         print("  thumbsdown: Hold thumbs down gesture steady")
         print("  pointingatyou: Point index finger at camera, hold steady")
-        print("  armscrossed: Cross arms over chest, hold for 5 seconds")
+        print("  middlefinger: Hold middle finger up steady")
+        print("  shrug: Shrug shoulders UP and hold for 5 seconds")
+        print("  headnod: Nod head up and down CONTINUOUSLY for 5 seconds")
+        print("  headshake: Shake head left and right CONTINUOUSLY for 5 seconds")
+        print("  neutral: Sit still, hands down, no movement at all")
         
         for gesture in gestures:
             input(f"\nPress Enter to record '{gesture}'...")
             collect_data(gesture, duration=5, data_type="gesture")
     
     elif choice == 'E':
-        emotions = ["angry", "happy", "neutral", "confused"]
+        emotions = ["happy", "angry", "shocked", "neutral"]
         print("\n=== EMOTION COLLECTION ===")
         print("Instructions:")
-        print("  angry: REALLY furrow eyebrows, frown hard, tighten jaw")
         print("  happy: BIG smile, show teeth, raise cheeks")
-        print("  neutral: Completely relaxed, resting face")
-        print("  confused: Furrow brow slightly, tilt head, slight frown")
+        print("  angry: REALLY furrow eyebrows, frown hard, tighten jaw")
+        print("  shocked: Eyes SUPER wide, eyebrows HIGH, mouth in big O shape")
+        print("  neutral: Completely relaxed, resting face, no expression")
         
         for emotion in emotions:
             input(f"\nPress Enter to record '{emotion}'...")
