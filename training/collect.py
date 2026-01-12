@@ -20,7 +20,7 @@ def collect_data(label, duration=5, data_type="gesture"):
     print(f"\n=== Recording: {label} ===")
     print("Get ready...")
     time.sleep(2)
-    print("GO!")
+    print("GO! HOLD THE POSE FOR 5 SECONDS!")
     
     start_time = time.time()
     
@@ -80,6 +80,8 @@ def collect_data(label, duration=5, data_type="gesture"):
         remaining = duration - (time.time() - start_time)
         cv2.putText(frame, f"{label}: {remaining:.1f}s", (10, 30),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(frame, "HOLD STEADY!", (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
         cv2.imshow('Recording', frame)
         cv2.waitKey(1)
     
@@ -101,31 +103,28 @@ if __name__ == "__main__":
     choice = input("\nCollect [G]estures or [E]motions? ").strip().upper()
     
     if choice == 'G':
-        gestures = ["wave", "thumbsup", "thumbsdown", "pointingatyou", "middlefinger", "shrug", "headnod", "headshake", "neutral"]
-        print("\n=== GESTURE COLLECTION ===")
-        print("Instructions:")
-        print("  wave: Wave hand side to side CONTINUOUSLY for 5 seconds")
-        print("  thumbsup: Hold thumbs up gesture steady")
-        print("  thumbsdown: Hold thumbs down gesture steady")
-        print("  pointingatyou: Point index finger at camera, hold steady")
-        print("  middlefinger: Hold middle finger up steady")
-        print("  shrug: Shrug shoulders UP and hold for 5 seconds")
-        print("  headnod: Nod head up and down CONTINUOUSLY for 5 seconds")
-        print("  headshake: Shake head left and right CONTINUOUSLY for 5 seconds")
-        print("  neutral: Sit still, hands down, no movement at all")
+        gestures = ["thumbsup", "thumbsdown", "pointingatyou", "middlefinger", "shrug", "neutral"]
+        print("\n=== GESTURE COLLECTION (ALL STATIC) ===")
+        print("Instructions - HOLD EACH POSE STEADY FOR 5 SECONDS:")
+        print("  thumbsup: Fist with thumb pointing UP - HOLD STEADY")
+        print("  thumbsdown: Fist with thumb pointing DOWN - HOLD STEADY")
+        print("  pointingatyou: Point index finger at camera - HOLD STEADY")
+        print("  middlefinger: Middle finger up - HOLD STEADY")
+        print("  shrug: Raise shoulders UP and HOLD THEM UP")
+        print("  neutral: Sit still, hands at sides or on lap - NO MOVEMENT")
         
         for gesture in gestures:
             input(f"\nPress Enter to record '{gesture}'...")
             collect_data(gesture, duration=5, data_type="gesture")
     
     elif choice == 'E':
-        emotions = ["happy", "angry", "shocked", "neutral"]
+        emotions = ["shocked", "angry", "happy", "neutral"]
         print("\n=== EMOTION COLLECTION ===")
-        print("Instructions:")
-        print("  happy: BIG smile, show teeth, raise cheeks")
-        print("  angry: REALLY furrow eyebrows, frown hard, tighten jaw")
-        print("  shocked: Eyes SUPER wide, eyebrows HIGH, mouth in big O shape")
-        print("  neutral: Completely relaxed, resting face, no expression")
+        print("Instructions - EXAGGERATE AND HOLD FOR 5 SECONDS:")
+        print("  shocked: Eyes SUPER WIDE, eyebrows HIGH, mouth in BIG O shape")
+        print("  angry: REALLY furrow eyebrows hard, frown, tighten jaw")
+        print("  happy: BIGGEST smile possible, show teeth, raise cheeks")
+        print("  neutral: Completely relaxed resting face, no expression")
         
         for emotion in emotions:
             input(f"\nPress Enter to record '{emotion}'...")

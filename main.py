@@ -54,7 +54,7 @@ def main():
                 
                 if changed:
                     print(f">>> {message}")
-                    say_interaction(message)
+                    say_interaction(message, emotion=current_emotion)
                     last_announcement_time = current_time
         
         # Visual feedback
@@ -91,7 +91,7 @@ def main():
             1
         )
 
-        cv2.imshow("Optxt", display_frame)
+        cv2.imshow("OPTXT", display_frame)
                 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):

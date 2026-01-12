@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report, accuracy_score
 import joblib
 
 def load_data(data_type="gesture"):
-    """Load all JSON files and prepare features with temporal sequences."""
+    """Load all JSON files and prepare features (single frame, no motion)."""
     data_dir = os.path.join(os.path.dirname(__file__), f"data/{data_type}")
     
     X = []  # Features
@@ -29,135 +29,55 @@ def load_data(data_type="gesture"):
         
         print(f"  {label}: {len(frames)} frames")
         
-        # For gestures: Create temporal sequences (sliding window)
-        # For emotions: Just use individual frames
-        if data_type == "gesture":
-            # Use sliding window of 5 frames
-            window_size = 5
-            for i in range(len(frames) - window_size + 1):
-                window = frames[i:i+window_size]
-                landmarks_sequence = [frame['landmarks'] for frame in window]
-                
-                features = extract_features(landmarks_sequence, data_type)
-                if features is not None:
-                    X.append(features)
-                    y.append(label)
-        else:
-            # Emotions: use single frames
-            for frame in frames:
-                landmarks_sequence = [frame['landmarks']]  # Wrap in list for consistency
-                features = extract_features(landmarks_sequence, data_type)
-                if features is not None:
-                    X.append(features)
-                    y.append(label)
+        # Extract features from EACH FRAME (no temporal sequences)
+        for frame in frames:
+            landmarks = frame['landmarks']
+            features = extract_features(landmarks, data_type)
+            if features is not None:
+                X.append(features)
+                y.append(label)
     
     return np.array(X), np.array(y)
 
-def extract_features(landmarks_sequence, data_type):
-    """
-    Convert landmarks to feature vector.
-    For gestures: Uses temporal features (motion over time)
-    For emotions: Uses spatial features only
-    
-    landmarks_sequence: List of landmark dicts from consecutive frames
-    """
+def extract_features(landmarks, data_type):
+    """Convert landmarks to feature vector (STATIC - NO MOTION)."""
+    features = []
     
     if data_type == "gesture":
-        # Use the LAST frame for spatial features
-        landmarks = landmarks_sequence[-1]
-        features = []
+        # Gesture features: pose (shoulders) + hands
         
-        # === SPATIAL FEATURES (current pose) ===
-        
-        # Shoulder positions (for shrug, arms crossed)
+        # Shoulder positions (for shrug detection)
         if 'pose' in landmarks:
             pose = landmarks['pose']
             features.extend([pose['left_shoulder'][0], pose['left_shoulder'][1]])
             features.extend([pose['right_shoulder'][0], pose['right_shoulder'][1]])
-            # Elbow positions (for arms crossed)
             features.extend([pose['left_elbow'][0], pose['left_elbow'][1]])
             features.extend([pose['right_elbow'][0], pose['right_elbow'][1]])
         else:
             features.extend([0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
         
-        # Hand positions (for wave, thumbs, pointing)
+        # Hand positions (for thumbs, pointing, middle finger)
         if 'hands' in landmarks and len(landmarks['hands']) > 0:
             hand = landmarks['hands'][0]
             features.extend([hand['wrist'][0], hand['wrist'][1]])
             features.extend([hand['thumb_tip'][0], hand['thumb_tip'][1]])
             features.extend([hand['index_tip'][0], hand['index_tip'][1]])
             features.extend([hand['middle_tip'][0], hand['middle_tip'][1]])
+            features.extend([hand['ring_tip'][0], hand['ring_tip'][1]])
+            features.extend([hand['pinky_tip'][0], hand['pinky_tip'][1]])
         else:
-            features.extend([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        
-        # Head position (for nod/shake baseline)
-        if 'face' in landmarks and 'nose_tip' in landmarks['face']:
-            nose = landmarks['face']['nose_tip']
-            chin = landmarks['face']['chin']
-            features.extend([nose[0], nose[1], chin[0], chin[1]])
-        else:
-            features.extend([0.5, 0.5, 0.5, 0.5])
-        
-        # === TEMPORAL FEATURES (motion over time) ===
-        
-        if len(landmarks_sequence) >= 5:
-            # Compare current frame to frame from 5 steps ago
-            old_landmarks = landmarks_sequence[-5]
-            new_landmarks = landmarks_sequence[-1]
-            
-            # Head motion (for nod/shake)
-            if ('face' in old_landmarks and 'nose_tip' in old_landmarks['face'] and
-                'face' in new_landmarks and 'nose_tip' in new_landmarks['face']):
-                
-                old_nose = old_landmarks['face']['nose_tip']
-                new_nose = new_landmarks['face']['nose_tip']
-                
-                # Motion in X (left/right - head shake)
-                motion_x = new_nose[0] - old_nose[0]
-                # Motion in Y (up/down - head nod)
-                motion_y = new_nose[1] - old_nose[1]
-                
-                features.extend([motion_x, motion_y])
-            else:
-                features.extend([0.0, 0.0])
-            
-            # Shoulder motion (for shrug detection)
-            if ('pose' in old_landmarks and 'pose' in new_landmarks):
-                old_left_sh_y = old_landmarks['pose']['left_shoulder'][1]
-                new_left_sh_y = new_landmarks['pose']['left_shoulder'][1]
-                shoulder_motion = new_left_sh_y - old_left_sh_y  # Negative = moving up
-                features.append(shoulder_motion)
-            else:
-                features.append(0.0)
-            
-            # Hand motion (for wave detection)
-            if ('hands' in old_landmarks and len(old_landmarks['hands']) > 0 and
-                'hands' in new_landmarks and len(new_landmarks['hands']) > 0):
-                
-                old_wrist_x = old_landmarks['hands'][0]['wrist'][0]
-                new_wrist_x = new_landmarks['hands'][0]['wrist'][0]
-                hand_motion_x = new_wrist_x - old_wrist_x
-                features.append(hand_motion_x)
-            else:
-                features.append(0.0)
-        else:
-            # Not enough frames for temporal features
-            features.extend([0.0, 0.0, 0.0, 0.0])
+            features.extend([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         
         return features
     
     elif data_type == "emotion":
-        # Emotions use only the LAST frame (no motion needed)
-        landmarks = landmarks_sequence[-1]
-        
+        # Emotion features: face landmarks only
         if 'face' not in landmarks:
             return None
         
-        features = []
         face = landmarks['face']
-        
         # Flatten all face coordinates (x, y only, ignore z)
-        for key in sorted(face.keys()):
+        for key in sorted(face.keys()):  # Sort for consistency
             features.extend([face[key][0], face[key][1]])
         
         return features
@@ -167,7 +87,7 @@ def extract_features(landmarks_sequence, data_type):
 def train_model(data_type="gesture"):
     """Train and save the classifier."""
     print("=" * 50)
-    print(f"🧠 TRAINING {data_type.upper()} MODEL")
+    print(f"🧠 TRAINING {data_type.upper()} MODEL (STATIC POSES)")
     print("=" * 50)
     
     # Load data
