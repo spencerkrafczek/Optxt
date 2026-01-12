@@ -10,7 +10,7 @@ from state_tracker import StateTracker
 
 def main():
     print("=" * 50)
-    print("OPTXT - INTERVIEW PRACTICE TOOL")
+    print("OPTXT")
     print("=" * 50)
 
     # Setup webcam
@@ -28,7 +28,7 @@ def main():
     print("=" * 50)
 
     last_announcement_time = time.time()
-    announcement_cooldown = 4.0  # Only announce changes every 2 seconds
+    announcement_cooldown = 4.0 
     
     while True:
         ret, frame = cap.read()
@@ -91,7 +91,7 @@ def main():
             1
         )
 
-        cv2.imshow("Interview Practice", display_frame)
+        cv2.imshow("Optxt", display_frame)
                 
         # Press 'q' to quit
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -99,7 +99,6 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
-    print("\n👋 Thanks for practicing!")
 
 if __name__ == "__main__":
     main()
